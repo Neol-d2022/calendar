@@ -27,7 +27,7 @@ int calendarToStringArray(const struct tm *m, StringArray_t *sa, int showCurrent
     static const char *_weekdayStrings[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
     char buf[64], bufd[32];
-    struct tm b, e, z;
+    struct tm b, e, z, y;
     Linked_t list;
     LinkedNode_t **c;
     calendarToStringArray_internal_object_t io;
@@ -39,16 +39,21 @@ int calendarToStringArray(const struct tm *m, StringArray_t *sa, int showCurrent
     memcpy(&b, m, sizeof(b));
     memcpy(&e, m, sizeof(e));
     memcpy(&z, m, sizeof(z));
+    memcpy(&y, m, sizeof(y));
 
     b.tm_mday = 1;
     e.tm_mon += 1;
     e.tm_mday = 0;
+    y.tm_mon = 0;
+    y.tm_mday = 1;
 
     if (mktime(&z) == -1)
         return 1;
     if (mktime(&b) == -1)
         return 1;
     if (mktime(&e) == -1)
+        return 1;
+    if (mktime(&y) == -1)
         return 1;
 
     LinkedInit(&list);
@@ -66,7 +71,7 @@ int calendarToStringArray(const struct tm *m, StringArray_t *sa, int showCurrent
     LinkedQuickInsert(&list, &c, nstr(buf));
 
     buf[0] = '\0';
-    sprintf(bufd, "%2u | ", w = (b.tm_yday / 7) + 1);
+    sprintf(bufd, "%2u | ", w = ((b.tm_yday + y.tm_wday) / 7) + 1);
     strcat(buf, bufd);
     for (i = 0; i < b.tm_wday; i += 1)
     {
