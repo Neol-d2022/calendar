@@ -26,6 +26,7 @@ typedef struct
 static void _UI_handler_exit(_UIprompt_internal_object_t *io);
 static void _UI_handler_help(_UIprompt_internal_object_t *io);
 static void _UI_handler_today(_UIprompt_internal_object_t *io);
+static void _UI_handler_show(_UIprompt_internal_object_t *io);
 
 static CommandHandler_t ch[] = {
     {"exit", "Exit the program", _UI_handler_exit},
@@ -35,6 +36,7 @@ static CommandHandler_t ch[] = {
     {"?", "Display help message", _UI_handler_help},
     {"t", "Display current calendar", _UI_handler_today},
     {"today", "Display current calendar", _UI_handler_today},
+    {"show", "Display specify calendar", _UI_handler_show},
 };
 
 static const size_t cmdLength = sizeof(ch) / sizeof(ch[0]);
@@ -87,20 +89,26 @@ static int _UIprompt(FILE *in, FILE *out)
     return 0;
 }
 
-static void _UI_show_current_calendar(FILE *out)
+static void _UI_show_calendar(FILE *out, const struct tm *t, int showCurrentDate)
 {
-    struct tm now;
     StringArray_t sa;
-    time_t t0;
 
-    time(&t0);
-    now = *localtime(&t0);
-    if (calendarToStringArray(&now, &sa, 1) == -1)
+    if (calendarToStringArray(t, &sa, showCurrentDate) == -1)
         abort();
 
     printStringArray(&sa, out);
     freeStringArray(&sa);
     printf("\n");
+}
+
+static void _UI_show_current_calendar(FILE *out)
+{
+    struct tm now;
+    time_t t0;
+
+    time(&t0);
+    now = *localtime(&t0);
+    _UI_show_calendar(out, &now, 1);
 }
 
 void UIEntry(FILE *in, FILE *out)
@@ -169,4 +177,81 @@ static void _UI_handler_help(_UIprompt_internal_object_t *io)
 static void _UI_handler_today(_UIprompt_internal_object_t *io)
 {
     _UI_show_current_calendar(io->out);
+}
+
+static char *_UI_getRemaining_token(char **remaining)
+{
+    char *p, *q;
+
+    if (remaining == NULL)
+        return NULL;
+
+    do
+    {
+        if (*remaining == NULL)
+            return NULL;
+        q = *remaining;
+        p = strpbrk(*remaining, " \n");
+        if (p)
+        {
+            *p = '\0';
+            *remaining = p + 1;
+        }
+        else
+            *remaining = NULL;
+    } while (strlen(q) == 0);
+
+    return q;
+}
+
+static void _UI_handler_show_help(FILE *out)
+{
+    fprintf(out, "USAGE: show <month> [<year>]\nUSAGE: month range: 1 ~ 12\nUSAGE: year range 1970+\n");
+}
+
+static void _UI_handler_show(_UIprompt_internal_object_t *io)
+{
+    struct tm t;
+    char *r, *p;
+    int *py = NULL;
+    time_t t0;
+    int y, m;
+
+    r = io->bufRest;
+    p = _UI_getRemaining_token(&r);
+    if (!p)
+        return _UI_handler_show_help(io->out);
+    if (sscanf(p, "%u", &m) != 1)
+        return _UI_handler_show_help(io->out);
+    if (m <= 0 || m > 12)
+        return _UI_handler_show_help(io->out);
+
+    p = _UI_getRemaining_token(&r);
+    if (p)
+    {
+        if (sscanf(p, "%u", &y) != 1)
+            return _UI_handler_show_help(io->out);
+        if (y < 1970)
+            return _UI_handler_show_help(io->out);
+        py = &y;
+    }
+
+    if (_UI_getRemaining_token(&r) != NULL)
+        return _UI_handler_show_help(io->out);
+
+    time(&t0);
+    t = *localtime(&t0);
+
+    if (py)
+        t.tm_year = y - 1900;
+    else
+        y = t.tm_year + 1900;
+    t.tm_mon = m - 1;
+    if (mktime(&t) == -1)
+    {
+        fprintf(io->out, "Cannot display calendar of month '%u' and year %u\n", m, y);
+        return;
+    }
+
+    _UI_show_calendar(io->out, &t, 0);
 }
