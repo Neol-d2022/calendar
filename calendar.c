@@ -32,9 +32,9 @@ int calendarToStringArray(const struct tm *m, StringArray_t *sa, int showCurrent
     LinkedNode_t **c;
     calendarToStringArray_internal_object_t io;
     size_t k, o;
-    char **ret;
+    char **ret, *p;
     unsigned int w;
-    int i, j;
+    int i, j, q, x;
 
     memcpy(&b, m, sizeof(b));
     memcpy(&e, m, sizeof(e));
@@ -58,7 +58,13 @@ int calendarToStringArray(const struct tm *m, StringArray_t *sa, int showCurrent
 
     LinkedInit(&list);
     c = &(list.head);
-    sprintf(buf, "   |          %4d %s\n", 1900 + b.tm_year, _monthStrings[b.tm_mon]);
+    q = sprintf(bufd, "%4d %s", 1900 + b.tm_year, _monthStrings[b.tm_mon]);
+    x = (29 - q) >> 1;
+    p = (char *)malloc(x + 1);
+    p[x] = '\0';
+    memset(p, ' ', x);
+    sprintf(buf, "   |%s%s\n", p, bufd);
+    free(p);
     LinkedQuickInsert(&list, &c, nstr(buf));
 
     buf[0] = '\0';
