@@ -84,12 +84,18 @@ int calendarToStringArray(const struct tm *m, StringArray_t *sa, int showCurrent
         {
             LinkedQuickInsert(&list, &c, nstr(buf));
             buf[0] = '\0';
-            sprintf(bufd, "%2u | ", ++w);
-            strcat(buf, bufd);
+            if (j + 1 <= e.tm_mday)
+            {
+                sprintf(bufd, "%2u | ", ++w);
+                strcat(buf, bufd);
+            }
         }
     }
-    strcat(buf, "\n");
-    LinkedQuickInsert(&list, &c, nstr(buf));
+    if (buf[0] != '\0')
+    {
+        strcat(buf, "\n");
+        LinkedQuickInsert(&list, &c, nstr(buf));
+    }
 
     ret = (char **)malloc(sizeof(*ret) * (list.count + 1));
     if (!ret)
