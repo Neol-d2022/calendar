@@ -223,7 +223,7 @@ static void _UI_handler_show(_UIprompt_internal_object_t *io)
     p = _UI_getRemaining_token(&r);
     if (!p)
         return _UI_handler_show_help(io->out);
-    if (sscanf(p, "%u", &m) != 1)
+    if (sscanf(p, "%d", &m) != 1)
         return _UI_handler_show_help(io->out);
     if (m <= 0 || m > 12)
         return _UI_handler_show_help(io->out);
@@ -231,7 +231,7 @@ static void _UI_handler_show(_UIprompt_internal_object_t *io)
     p = _UI_getRemaining_token(&r);
     if (p)
     {
-        if (sscanf(p, "%u", &y) != 1)
+        if (sscanf(p, "%d", &y) != 1)
             return _UI_handler_show_help(io->out);
         if (y < 1970)
             return _UI_handler_show_help(io->out);
