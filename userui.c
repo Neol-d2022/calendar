@@ -37,6 +37,7 @@ static CommandHandler_t ch[] = {
     {"t", "Display current calendar", _UI_handler_today},
     {"today", "Display current calendar", _UI_handler_today},
     {"show", "Display specify calendar", _UI_handler_show},
+    {"s", "Display specify calendar", _UI_handler_show},
 };
 
 static const size_t cmdLength = sizeof(ch) / sizeof(ch[0]);
