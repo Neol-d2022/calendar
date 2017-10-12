@@ -90,26 +90,27 @@ static int _UIprompt(FILE *in, FILE *out)
     return 0;
 }
 
-static void _UI_show_calendar(FILE *out, const struct tm *t, int showCurrentDate)
+static int _UI_show_calendar(FILE *out, const struct tm *t, int showCurrentDate)
 {
     StringArray_t sa;
 
-    if (calendarToStringArray(t, &sa, showCurrentDate) == -1)
-        abort();
+    if (calendarToStringArray(t, &sa, showCurrentDate) != 0)
+        return 1;
 
     printStringArray(&sa, out);
     freeStringArray(&sa);
     printf("\n");
+    return 0;
 }
 
-static void _UI_show_current_calendar(FILE *out)
+static int _UI_show_current_calendar(FILE *out)
 {
     struct tm now;
     time_t t0;
 
     time(&t0);
     now = *localtime(&t0);
-    _UI_show_calendar(out, &now, 1);
+    return _UI_show_calendar(out, &now, 1);
 }
 
 void UIEntry(FILE *in, FILE *out)
@@ -250,9 +251,13 @@ static void _UI_handler_show(_UIprompt_internal_object_t *io)
     t.tm_mon = m - 1;
     if (mktime(&t) == -1)
     {
-        fprintf(io->out, "Cannot display calendar of month '%u' and year %u\n", m, y);
+        fprintf(io->out, "Cannot display calendar of month '%u' and year '%u'\n", m, y);
         return;
     }
 
-    _UI_show_calendar(io->out, &t, 0);
+    if (_UI_show_calendar(io->out, &t, 0) != 0)
+    {
+        fprintf(io->out, "Cannot display calendar of month '%u' and year '%u'\n", m, y);
+        return;
+    }
 }

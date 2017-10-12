@@ -1,6 +1,7 @@
 CC=gcc
 
-CFLAGS=-Wall -Wextra -Ofast
+WIN_CDEFINES=-D__MSVCRT_VERSION__=__MSVCR80_DLL
+CFLAGS=-Wall -Wextra -Ofast $(WIN_CDEFINES)
 LFLAGS=-s
 
 OBJS=calendar.o linkedlist.o main.o stringarray.o strings.o userui.o
